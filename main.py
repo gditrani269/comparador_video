@@ -6,7 +6,6 @@ from ui.ventana_principal import VentanaPrincipal
 
 
 def main():
-
     app = QApplication(sys.argv)
 
     ventana = VentanaPrincipal()
