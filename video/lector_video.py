@@ -48,3 +48,18 @@ class LectorVideo:
     def release(self):
         if getattr(self, "video", None) is not None:
             self.video.release()
+
+    def ir_a_posicion(self, posicion):
+
+        total = self.video.get(
+            cv2.CAP_PROP_FRAME_COUNT
+        )
+
+        frame = (
+            total * posicion / 1000
+        )
+
+        self.video.set(
+            cv2.CAP_PROP_POS_FRAMES,
+            int(frame)
+        )

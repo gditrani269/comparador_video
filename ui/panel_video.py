@@ -7,11 +7,11 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
     QFileDialog,
-    QSlider,
 )
 
 from config import ANCHO_VIDEO, ALTO_VIDEO, INTERVALO_TIMER_MS
 from video.lector_video import LectorVideo
+from ui.barra_tiempo import BarraTiempo
 
 
 class PanelVideo(QWidget):
@@ -21,6 +21,7 @@ class PanelVideo(QWidget):
         self.titulo = titulo
         self.lector = None
         self.reanudar_despues_seek = False
+        self.buscando = False
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.actualizar_frame)
@@ -63,20 +64,25 @@ class PanelVideo(QWidget):
         ):
             controles.addWidget(boton)
 
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(0, 0)
-        self.slider.setEnabled(False)
-        self.slider.valueChanged.connect(self.actualizar_tiempo_desde_slider)
-        self.slider.sliderPressed.connect(self.iniciar_busqueda)
-        self.slider.sliderReleased.connect(self.finalizar_busqueda)
-
         self.etiqueta_tiempo = QLabel("00:00 / 00:00")
         self.etiqueta_tiempo.setAlignment(Qt.AlignRight)
 
         layout.addWidget(self.video)
+        self.barra = BarraTiempo()
+        self.barra.sliderPressed.connect(
+            self.iniciar_busqueda
+        )
+
+        self.barra.sliderReleased.connect(
+            self.finalizar_busqueda
+        )
+        self.barra.valueChanged.connect(
+            self.preview_busqueda
+        )
+        layout.addWidget(self.barra)
         layout.addWidget(self.boton_abrir)
         layout.addLayout(controles)
-        layout.addWidget(self.slider)
+
         layout.addWidget(self.etiqueta_tiempo)
         self.setLayout(layout)
 
@@ -113,9 +119,16 @@ class PanelVideo(QWidget):
             return
 
         self.mostrar_frame(frame)
-        self.slider.setRange(0, max(0, self.lector.total_frames - 1))
-        self.slider.setValue(0)
-        self.slider.setEnabled(self.lector.total_frames > 1)
+        self.barra.setRange(
+            0,
+            max(0, self.lector.total_frames - 1)
+        )
+
+        self.barra.setValue(0)
+
+        self.barra.setEnabled(
+            self.lector.total_frames > 1
+        )
         self.actualizar_etiqueta_tiempo(0)
         self.actualizar_estado_controles(True)
         self.boton_play.setText("▶ Play")
@@ -210,15 +223,17 @@ class PanelVideo(QWidget):
             self.boton_play.setText("▶ Play")
 
     def iniciar_busqueda(self):
+        self.buscando = True
         self.reanudar_despues_seek = self.timer.isActive()
         if self.reanudar_despues_seek:
             self.timer.stop()
 
     def finalizar_busqueda(self):
+        self.buscando = False
         if self.lector is None:
             return
 
-        frame = self.lector.ir_a_frame(self.slider.value())
+        frame = self.lector.ir_a_frame(self.barra.value())
         if frame is not None:
             self.mostrar_frame(frame)
             self.actualizar_slider(self.lector.frame_actual)
@@ -233,9 +248,12 @@ class PanelVideo(QWidget):
             self.actualizar_etiqueta_tiempo(valor)
 
     def actualizar_slider(self, valor):
-        self.slider.blockSignals(True)
-        self.slider.setValue(valor)
-        self.slider.blockSignals(False)
+        self.barra.blockSignals(True)
+
+        self.barra.setValue(valor)
+
+        self.barra.blockSignals(False)
+
         self.actualizar_etiqueta_tiempo(valor)
 
     def actualizar_etiqueta_tiempo(self, numero_frame):
@@ -276,3 +294,35 @@ class PanelVideo(QWidget):
         self.timer.stop()
         self.liberar_lector()
         super().closeEvent(event)
+
+    def mover_video(self, posicion):
+
+        if hasattr(self, "lector"):
+
+            self.lector.ir_a_posicion(
+                posicion
+            )
+
+            frame = self.lector.obtener_frame()
+
+            if frame is not None:
+
+                self.mostrar_frame(frame)
+
+    def preview_busqueda(self, valor):
+
+        if not self.buscando:
+            return
+
+        if self.lector is None:
+            return
+
+        valor = min(
+            valor,
+            self.lector.total_frames - 1
+        )
+
+        frame = self.lector.ir_a_frame(valor)
+
+        if frame is not None:
+            self.mostrar_frame(frame)
