@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
 )
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from video.lector_video import LectorVideo
 from PySide6.QtGui import QImage, QPixmap
 
@@ -18,6 +18,12 @@ class PanelVideo(QWidget):
         super().__init__()
 
         self.titulo = titulo
+
+        self.timer = QTimer()
+
+        self.timer.timeout.connect(
+            self.actualizar_frame
+        )
 
         self.crear_interfaz()
 
@@ -73,11 +79,12 @@ class PanelVideo(QWidget):
                 archivo
             )
 
-            frame = self.lector.obtener_primer_frame()
+            frame = self.lector.obtener_frame()
 
             if frame is not None:
 
                 self.mostrar_frame(frame)
+                self.timer.start(40)
 
     def mostrar_frame(self, frame):
 
@@ -99,3 +106,15 @@ class PanelVideo(QWidget):
         )
 
         self.video.setPixmap(pixmap)
+
+    def actualizar_frame(self):
+
+        frame = self.lector.obtener_frame()
+
+        if frame is not None:
+
+            self.mostrar_frame(frame)
+
+        else:
+
+            self.timer.stop()

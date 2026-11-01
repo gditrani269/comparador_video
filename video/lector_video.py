@@ -12,7 +12,7 @@ class LectorVideo:
         )
 
 
-    def obtener_primer_frame(self):
+    def obtener_frame(self):
 
         correcto, frame = self.video.read()
 
