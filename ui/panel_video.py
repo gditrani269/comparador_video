@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
     QFileDialog,
+    QSizePolicy,
 )
 
 from config import ANCHO_VIDEO, ALTO_VIDEO, INTERVALO_TIMER_MS
@@ -18,6 +19,10 @@ class PanelVideo(QWidget):
     def __init__(self, titulo):
         super().__init__()
 
+        self.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Expanding,
+        )
         self.titulo = titulo
         self.lector = None
         self.reanudar_despues_seek = False

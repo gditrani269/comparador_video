@@ -1,4 +1,10 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QHBoxLayout,
+    QSplitter,
+)
+from PySide6.QtCore import Qt
 
 from config import TITULO, VERSION, ANCHO_VENTANA, ALTO_VENTANA
 from ui.panel_video import PanelVideo
@@ -19,8 +25,14 @@ class VentanaPrincipal(QMainWindow):
         self.video1 = PanelVideo("Video 1")
         self.video2 = PanelVideo("Video 2")
 
-        layout.addWidget(self.video1)
-        layout.addWidget(self.video2)
+        splitter = QSplitter(Qt.Horizontal)
+
+        splitter.addWidget(self.video1)
+        splitter.addWidget(self.video2)
+
+        splitter.setSizes([1, 1])
+
+        layout.addWidget(splitter)
         layout.setSpacing(20)
 
         contenedor.setLayout(layout)
